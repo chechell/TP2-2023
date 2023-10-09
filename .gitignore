@@ -1,2 +1,2 @@
-package-lock.json
-package.json
+.env.dev
+.env.prod
