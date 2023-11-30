@@ -3,23 +3,18 @@ const mongoose = require('mongoose')
 const app = express()
 app.use(express.json())
 
-const dotenv = require('dotenv')
-
-if (process.env.PD === 'DEV') {
-dotenv.config({path: '.env.dev'})
-}
-if (process.env.PD === 'PROD') {
-  dotenv.config({path: '.env.prod'})
-}
-
 
 const modelodeUsuario = mongoose.model('contas', new mongoose.Schema({
     email: String,
     password: String,
+    admin: Boolean
+}))
+const modelodePrevisao = mongoose.model('previsoes', new mongoose.Schema({
+  descricao: String
 }))
 
 
-mongoose.connect(process.env.URLDB)
+mongoose.connect('mongodb://localhost:27017/db')
   .then(()=>{
 
     app.post('/pegar-dados', async (req,res)=>{
@@ -46,6 +41,18 @@ mongoose.connect(process.env.URLDB)
     await modelodeUsuario.deleteOne(req.body, {returnDocument: 'before'})
     res.send(usuarioEncontrado)
     })
+
+    app.post('/postar-previsoes/admin', async (req,res)=>{
+      const usuarioEncontrado = await modelodeUsuario.findOne({email: req.body.email, password: req.body.password, admin: req.body.admin})
+      console.log(usuarioEncontrado);
+      if(usuarioEncontrado.admin === true){
+       const previsao = await modelodePrevisao.create({descricao: req.body.descricao})
+      return res.json(previsao)
+      }
+      res.json('vc não é admin')
+    })
+
+
 
     app.listen(3000)
   })
